@@ -1,21 +1,37 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.util.Scanner;
 
 public class PayrollCalculator {
+    private static Scanner scanner = new Scanner(System.in);
     public static void main(String[] args) {
-        FileReader reader = null;
+
+        System.out.print("Please Enter a File Name to Scan: ");
+        String path_in = scanner.nextLine().trim();
+        //Setting up the reader
+        FileReader reader;
         try {
-            reader = new FileReader("src/main/resources/DataFiles/employees.csv");
+            reader = new FileReader("src/main/resources/DataFiles/" + path_in);
         } catch (FileNotFoundException ignored) {
-            System.out.println("File Not Found Please Check \"src/main/resources/DataFiles/employees.csv\" Actually Exists");
+            System.out.printf("File Not Found Please Check \"src/main/resources/DataFiles/%s\" Actually Exists", path_in);
             return;
         }
-        BufferedReader buff = new BufferedReader(reader);
+
+        FileWriter writer;
+        System.out.print("Please Enter a File Name to Save: ");
         try {
-            buff.readLine(); //discard the first line (not an actual employee)
-            for(String line = buff.readLine(); line != null ; line = buff.readLine()){
+            writer = new FileWriter("target/classes/DataFiles/" + scanner.nextLine().trim());
+        } catch (IOException e) {
+            return;
+        }
+
+
+        //Setting up buffered reader & writer
+        BufferedReader buff_r = new BufferedReader(reader);
+        BufferedWriter buff_w = new BufferedWriter(writer);
+        try {
+            buff_r.readLine(); //discard the first line (not an actual employee)
+            buff_w.write("id|name|gross pay\n");
+            for(String line = buff_r.readLine(); line != null ; line = buff_r.readLine()){
 
                 //splits line into ID, Name, HoursWorked, PayRate
                 String[] tokens = line.split("\\|");
@@ -27,10 +43,11 @@ public class PayrollCalculator {
                 float payRate = Float.parseFloat(tokens[3]);
 
                 Employee employee = new Employee(employeeID, name, hoursWorked, payRate);
-                System.out.printf("ID: %d, Name: %s, Gross Pay: $%.2f\n", employee.getEmployeeId(), employee.getName(), employee.getGrossPay());
+                buff_w.write(String.format("%d|%s|%.2f\n", employee.getEmployeeId(), employee.getName(), employee.getGrossPay()));
             }
+            buff_w.close();
         }catch (IOException ignored){
-
+            System.out.print("Exception!");
         }
     }
 }
